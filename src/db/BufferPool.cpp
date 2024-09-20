@@ -239,3 +239,28 @@ void BufferPool::searchPid(const PageId &pid) const {
     current = current->next;
   } while (current != nullptr);
 }
+
+bool BufferPool::searchFile(const std::string &name) const {
+  current = first;
+  if (first == nullptr) {
+    return false;
+  }
+  do {
+    if (current->pageId.file == name) {
+      return true;
+    }
+    current = current->next;
+  } while (current != nullptr);
+  return false;
+}
+
+void BufferPool::discardFile(const std::string &file) {
+  // TODO pa1: Flush all pages of the file to disk
+    current = first;
+    while (current != nullptr) {
+      if (current->pageId.file == file) {
+        discardPage(current->pageId);
+      }
+      current = current->next;
+    }
+}

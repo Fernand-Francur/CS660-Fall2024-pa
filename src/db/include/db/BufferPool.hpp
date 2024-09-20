@@ -6,6 +6,47 @@
 #include <unordered_set>
 #include <vector>
 
+/*
+ * The bufferpool is implemented in the most logical way, using a doubly-linked list
+ * as the backend data structure for LRU. For this purpose, I use the pageControlBlock (PCB)
+ * As the structure for each linked-list block, containing the pageId, page, isDirty, and next
+ * and prev pointers for the linked list. The list is managed and scaled dynamically with
+ * the DEFAULT_NUM_PAGES as it checks at every function if the limit has been used or reached
+ * respective of the function's purpose. The description of what each function does are labeled
+ * above each respective function as a brief and note, but most information will be here at the top
+ * of the hpp file. No additional notes are made in the .ccp file for the sake of good code styling.
+ * The rest of specific design choices and notes I will list here:
+ *
+ * Notes:
+ * 1) Each function behaves exactly as the TODOs listed and I did not remove the TODOs as
+ * they are good descriptors of what each function does.
+ *
+ * 2) I use three pointers to manage the linked list which are first and last, which simply
+ * point to the first and last PCB in the list respectively, and current, which is changed
+ * according to which page needs to be looked at at a present moment.
+ *
+ * 3) Every function that innately assumes that a pid is in the Database or the bufferpool
+ * will throw a logic error 'No such page in bufferpool' if that page does not exist in the
+ * bufferpool.
+ *
+ * 4) For the sake of reducing code repetitiveness, I added the function searchPid, which
+ * simply searches and sets the current pointer to the specified pid.
+ *
+ * 5) There are two more helper functions: searchFile and discardFile, which respectively
+ * do as the name entails. The first checks if a page from a particular file exists in the
+ * bufferpool, and the other discards all pages associated with a file. These have other
+ * uses, but currently are generally just to make the job of the Database::remove function
+ * easier by being able to flush and discard all the pages related to a file that is to be
+ * deleted from the underlying database.
+ *
+ * 6) Since the database owns the bufferpool, I did not add a pointer to the database as an
+ * internal component to the bufferpool and instead invoke a getDatabase call whenever I need
+ * to see a file from the database. This is probably very inefficient, but as the problem
+ * states, we are only to implement functions and not care about the efficiency too much.
+ * However if you have any recommendations on better ways of accessing the Database in these
+ * functions they would be greatly appreciated.
+ */
+
 typedef struct pageControlBlock {
   db::PageId pageId;
   db::Page page;
@@ -35,7 +76,6 @@ private:
 
 
   int freePages;
-  //void *database;
 public:
   /**
    * @brief: Constructs a BufferPool object with the default number of pages.
@@ -104,7 +144,28 @@ public:
    */
   void flushFile(const std::string &file);
 
+  /**
+   * @brief: Helper function which sets the current pointer to the page with
+   * the input PageId.
+   * @note Does not check for existence of the page. This check is
+   * performed by each function individually based on what each function is looking
+   * for.
+   */
   void searchPid(const PageId &pid) const;
+
+  /**
+   * @brief: Helper function which simply returns if a page from specified file
+   * name exists in the bufferpool.
+   */
+  bool searchFile(const std::string &name) const;
+
+  /**
+   * @brief: Helper function which discards all pages related to a given file.
+   * @note  Does not flush the file and assumes a flushFile has already been performed.
+   * Used solely for a database remove function in order to erase any pages in bufferpool
+   * from a file that has been deleted from the database.
+   */
+  void discardFile(const std::string &file);
 
 };
 } // namespace db

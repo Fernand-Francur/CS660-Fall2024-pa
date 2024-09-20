@@ -11,9 +11,38 @@
  * The class also supports removing all files from the catalog.
  * @note A Database owns the DbFile objects that are added to it.
  */
+
+/*
+ * For my implementation of the Database, I am assuming that we would actually want to have an SQL or
+ * other database structure backend, but since we are essentially making a wrapper for the Database
+ * the main inclusion is a hashmap of file names and the associated DbFiles. This allows for amortized
+ * O(1) access queries which is advantageous since most Bufferpool and Database functions require
+ * locating a file on the database. Even adding a file, we must first check to see if it exists. For the
+ * map, you can find it in the class declaration written simply under the variable 'data'.
+ *
+ * A few notes:
+ * 1) Since we use unique_pointers, I specifically transfer ownership through std::move.
+ * Given that it was not specified exactly how ownership is supposed to be transferred,
+ * this was what I assumed should be done, moving the original pointer caller to be the Database.
+ *
+ * 2) For remove, I flush the pages of the file if they exist, but I realized if I did this then
+ * this leaves an opening where a user can mistakenly write to a file in memory that is no longer
+ * in the database, making it dirty and causing a problem if it is evicted. I am not sure if we
+ * are assuming perfect usage by user here, so I added a helper function in Bufferpool that is called
+ * in one place and only after the file has been flushed which discards all the pages related to a file.
+ * This allows us to avoid that issue again of dirty pages floating in the bufferpool with the file
+ * not in the database at the cost of some performance on remove. I did this explicitly as this was
+ * the quickest method to do this. Realistically, the best way to do this is just to add a flag to
+ * the files' pages that they are just read-only in memory and let them be discarded organically,
+ * but since this was not a prerequisite of the assignment nor are we asked for complete efficiency,
+ * I chose this quick and dirty method for making remove work as intended while being user proof.
+ *
+ * 3) I left in the TODOs for each function in the cpp file in order to be good checkpoints where
+ * code was added. I will have some minor comments here and there on important parts of the code
+ * but I will put them only in hpp files as a form of good style practices.
+ */
 namespace db {
 class Database {
-  // TODO pa1: add private members
   std::unordered_map<std::string,std::unique_ptr<DbFile>, std::hash<std::string>> data;
   BufferPool bufferPool;
 

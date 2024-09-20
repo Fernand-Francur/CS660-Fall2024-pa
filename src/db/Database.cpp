@@ -25,8 +25,12 @@ void Database::add(std::unique_ptr<DbFile> file) {
 std::unique_ptr<DbFile> Database::remove(const std::string &name) {
   // TODO pa1: remove the file from the catalog. Note that the file must exist.
   if (auto search = data.find(name); search != data.end()) {
+    if (this->bufferPool.searchFile(name)) {
+      this->bufferPool.flushFile(name);
+      this->bufferPool.discardFile(name);
+    }
     std::unique_ptr<DbFile> tmp = std::move(search->second);
-    data.erase(search); //FLUSHFILE HERE INSTEAD
+    data.erase(search);
     return tmp;
   } else {
     throw std::logic_error("No such file name in Database");
