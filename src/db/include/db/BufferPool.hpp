@@ -6,6 +6,18 @@
 #include <unordered_set>
 #include <vector>
 
+typedef struct pageControlBlock {
+  db::PageId pageId;
+  db::Page page;
+  bool isDirty;
+  struct pageControlBlock *next;
+  struct pageControlBlock *prev;
+} PCB;
+
+static PCB * first;
+static PCB * current;
+static PCB * last;
+
 namespace db {
 constexpr size_t DEFAULT_NUM_PAGES = 50;
 /**
@@ -15,21 +27,13 @@ constexpr size_t DEFAULT_NUM_PAGES = 50;
  * The class also supports flushing pages to disk and discarding pages from the buffer pool.
  * @note A BufferPool owns the Page objects that are stored in it.
  */
-typedef struct pageControlBlock {
-  PageId pageId;
-  Page page;
-  bool isDirty;
-  struct pageControlBlock *next;
-  struct pageControlBlock *prev;
-} PCB;
+
 
 class BufferPool {
   // TODO pa1: add private members
 private:
 
-  static PCB * first;
-  static PCB * current;
-  static PCB * last;
+
   int freePages;
   //void *database;
 public:

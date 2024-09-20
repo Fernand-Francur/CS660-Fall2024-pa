@@ -16,6 +16,19 @@ BufferPool::BufferPool()
 
 BufferPool::~BufferPool() {
   // TODO pa1: flush any remaining dirty pages
+  if (freePages == DEFAULT_NUM_PAGES) {
+  } else {
+    current = first;
+    Database &db = getDatabase();
+    while (current != nullptr) {
+      if (current->isDirty) {
+        DbFile *currFile = &db.get(current->pageId.file);
+        currFile->writePage(current->page, current->pageId.page);
+        current->isDirty = false;
+      }
+      current = current->next;
+    }
+  }
 }
 
 Page &BufferPool::getPage(const PageId &pid) {
@@ -24,7 +37,12 @@ Page &BufferPool::getPage(const PageId &pid) {
   // TODO pa1: If there are no available pages, evict the least recently used page. If it is dirty, flush it to disk
 
   // TODO pa1: Read the page from disk to one of the available slots, make it the most recent page
-  searchPid(pid);
+
+  if (freePages != DEFAULT_NUM_PAGES) {
+    searchPid(pid);
+  } else {
+    current = nullptr;
+  }
   if (current != nullptr) {
     if (current != first) {
       if (current->next == nullptr) {
@@ -207,6 +225,7 @@ void BufferPool::flushFile(const std::string &file) {
         currFile->writePage(current->page, current->pageId.page);
         current->isDirty = false;
       }
+      current = current->next;
     }
   }
 }
