@@ -9,6 +9,7 @@ class HeapPage {
   uint8_t *header;
   uint8_t *data;
 
+
 public:
   /**
    * @brief Wrap a page with a heap page.

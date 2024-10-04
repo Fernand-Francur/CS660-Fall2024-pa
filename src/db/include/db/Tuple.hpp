@@ -18,8 +18,9 @@ public:
 };
 
 class TupleDesc {
-  // TODO pa2: add private members
-
+  std::vector<type_t> types;
+  std::vector<std::string> names;
+  size_t sizeTuple;
 public:
   TupleDesc() = default;
   /**
