@@ -12,7 +12,10 @@ index and leaf pages, nothing extra was added and they pass all tests for their 
 ## (2) Missing or incomplete elements
 For the assignment, I fulfill all requirements and anything that can be considered missing is outside of the scope of
 the assignment. Currently however the btree tests seem to have some bugs in them and I have yet to find them and have
-not had time due to unforseen time complications.
+not had time due to unforeseen time complications. Essentially smaller btrees function exactly as expected, but on
+index page division, sorting goes awry in weird edge cases. My code is also very inefficient, so it tends to
+take a while and on your systems might run into issues of timeout. Please let me know if I can show you its function
+directly if that is an issue.
 
 ## (3) Analytical questions
 No analytical questions are listed as analytical questions in the pa1 directory so I will assume this means technical
