@@ -50,13 +50,14 @@ grows above a specified having value.
 ### Question 3:
 My current join complexity is O(N x M) where N is number of tuples from left table and M is number of tuples from right
 table if we ignore bufferpool optimization. If we use the bufferpool and are able to pin the left table's currently read
-page to memory, we can get a complexity of O(N x M / b^2) I/O where b is pagesize because we will be buffering both the 
-left and right pages. We can optimize this further by using a hashmap on the first pass of the right table. By storing
-the possibly non-unique values in a hashmap along with the tuple and page index, we can allow predicate operations to 
-know ahead of time which tuples and pages it needs to access for a particular tuple in the left table. As a result, if
-we construct this hash we can get as small a complexity of O((N+M) / b^2) if the tuples are completely sorted 
-because we would only have to do a single read of a page and have it cached in the buffer pool if it works for a
-particular predicate. Worst case would still be O(N x M / b^2) I/O though.
+page to memory, we can get a complexity of O(a + N * b) I/O where a is the number of tuples in the outer page and
+b is the number of tuples in a page on the inner table because we will be buffering both the 
+left and right pages, but we still need to read in all pages of the outer table per tuple N. 
+We can optimize this by the sequence of how we read in the pages. What we can do is specifically keep one page of the 
+outer table in memory and compare it with all the pages of the inner table before we move to the next table. As a result
+we can get an optimized complexity of O(a + a*b) because we would only have to read in pages of the inner table 
+for each page of the outer table because after we compare tuples in the outer table page to all the tuples in the inner
+table, we never have to read it again, and therefore we only have to perform b extra pages per outer table page.
 
 ## (4) Time and Challenges
 I spent about 5 hours on this assignment as it felt on the easier side. No real challenges
